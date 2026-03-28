@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.25rem;
+
+    /* Elaiyaahh warm cream palette — OKLCH L C H */
+    --background: 0.953 0.012 72; /* #F4EEE6 warm cream */
+    --foreground: 0.185 0.015 60; /* #1F1A16 near-black */
+    --card: 0.92 0.018 70; /* #EDE3D8 secondary beige */
+    --card-foreground: 0.185 0.015 60;
+    --popover: 0.953 0.012 72;
+    --popover-foreground: 0.185 0.015 60;
+    --primary: 0.73 0.09 70; /* #C9A678 golden beige CTA */
+    --primary-foreground: 0.976 0.008 70; /* #FAF6F0 */
+    --secondary: 0.92 0.018 70; /* #EDE3D8 panel */
+    --secondary-foreground: 0.38 0.02 60;
+    --muted: 0.92 0.018 70;
+    --muted-foreground: 0.38 0.02 60; /* #4A3F38 warm charcoal */
+    --accent: 0.882 0.03 40; /* #E9D2C8 blush */
+    --accent-foreground: 0.185 0.015 60;
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 0.985 0 0;
+    --border: 0.82 0.02 60; /* #D7C7B8 taupe */
+    --input: 0.82 0.02 60;
+    --ring: 0.73 0.09 70;
+    --chart-1: 0.73 0.09 70;
+    --chart-2: 0.882 0.03 40;
+    --chart-3: 0.92 0.018 70;
+    --chart-4: 0.66 0.09 70;
+    --chart-5: 0.38 0.02 60;
+    --sidebar: 0.953 0.012 72;
+    --sidebar-foreground: 0.185 0.015 60;
+    --sidebar-primary: 0.73 0.09 70;
+    --sidebar-primary-foreground: 0.976 0.008 70;
+    --sidebar-accent: 0.92 0.018 70;
+    --sidebar-accent-foreground: 0.185 0.015 60;
+    --sidebar-border: 0.82 0.02 60;
+    --sidebar-ring: 0.73 0.09 70;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "DM Sans", sans-serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
