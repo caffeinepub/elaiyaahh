@@ -13,9 +13,6 @@ export interface JournalPost {
     imageUrl: string;
     excerpt: string;
 }
-export interface UserProfile {
-    name: string;
-}
 export interface Product {
     id: string;
     name: string;
@@ -30,30 +27,17 @@ export enum ProductCategory {
     skincare = "skincare",
     makeup = "makeup"
 }
-export enum UserRole {
-    admin = "admin",
-    user = "user",
-    guest = "guest"
-}
 export interface backendInterface {
     addJournalPost(journalPost: JournalPost): Promise<JournalPost>;
     addProduct(product: Product): Promise<Product>;
-    assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    claimAdmin(): Promise<boolean>;
     deleteJournalPost(id: string): Promise<boolean>;
     deleteProduct(id: string): Promise<boolean>;
     getAllProductsByCategory(): Promise<Array<[string, Array<Product>]>>;
     getBestsellers(): Promise<Array<Product>>;
-    getCallerUserProfile(): Promise<UserProfile | null>;
-    getCallerUserRole(): Promise<UserRole>;
     getJournalPosts(): Promise<Array<JournalPost>>;
     getNewsletterSubscribers(): Promise<Array<string>>;
     getProducts(): Promise<Array<Product>>;
     getProductsByCategory(category: ProductCategory): Promise<Array<Product>>;
-    getUserProfile(user: Principal): Promise<UserProfile | null>;
-    isAdminClaimed(): Promise<boolean>;
-    isCallerAdmin(): Promise<boolean>;
-    saveCallerUserProfile(profile: UserProfile): Promise<void>;
     subscribeNewsletter(email: string): Promise<boolean>;
     updateJournalPost(id: string, journalPost: JournalPost): Promise<boolean>;
     updateProduct(id: string, product: Product): Promise<boolean>;

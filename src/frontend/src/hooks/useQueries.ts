@@ -1,7 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { JournalPost, Product } from "../backend.d";
 import { useActor } from "./useActor";
-import { useInternetIdentity } from "./useInternetIdentity";
 
 export function useBestsellers() {
   const { actor, isFetching } = useActor();
@@ -51,49 +50,7 @@ export function useSubscribeNewsletter() {
 
 // ─── Admin hooks ────────────────────────────────────────────────────────────
 
-export function useIsCallerAdmin() {
-  const { identity } = useInternetIdentity();
-  const { actor, isFetching } = useActor();
-  return useQuery<boolean>({
-    queryKey: ["isCallerAdmin", identity?.getPrincipal().toString()],
-    queryFn: async () => {
-      if (!actor) return false;
-      try {
-        return await actor.isCallerAdmin();
-      } catch {
-        return false;
-      }
-    },
-    enabled: !!actor && !isFetching && !!identity,
-  });
-}
-
-export function useIsAdminClaimed() {
-  const { actor, isFetching } = useActor();
-  return useQuery<boolean>({
-    queryKey: ["isAdminClaimed"],
-    queryFn: async () => {
-      if (!actor) return false;
-      // biome-ignore lint/suspicious/noExplicitAny: method may not be in generated types yet
-      return (actor as any).isAdminClaimed();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useClaimAdmin() {
-  const { actor } = useActor();
-  return useMutation<boolean, Error>({
-    mutationFn: async () => {
-      if (!actor) throw new Error("Not connected");
-      // biome-ignore lint/suspicious/noExplicitAny: method may not be in generated types yet
-      return (actor as any).claimAdmin();
-    },
-  });
-}
-
 export function useAdminProducts() {
-  const { identity } = useInternetIdentity();
   const { actor, isFetching } = useActor();
   return useQuery<Product[]>({
     queryKey: ["admin", "products"],
@@ -101,12 +58,11 @@ export function useAdminProducts() {
       if (!actor) return [];
       return actor.getProducts();
     },
-    enabled: !!actor && !isFetching && !!identity,
+    enabled: !!actor && !isFetching,
   });
 }
 
 export function useAdminJournalPosts() {
-  const { identity } = useInternetIdentity();
   const { actor, isFetching } = useActor();
   return useQuery<JournalPost[]>({
     queryKey: ["admin", "journalPosts"],
@@ -114,12 +70,11 @@ export function useAdminJournalPosts() {
       if (!actor) return [];
       return actor.getJournalPosts();
     },
-    enabled: !!actor && !isFetching && !!identity,
+    enabled: !!actor && !isFetching,
   });
 }
 
 export function useAdminSubscribers() {
-  const { identity } = useInternetIdentity();
   const { actor, isFetching } = useActor();
   return useQuery<string[]>({
     queryKey: ["admin", "subscribers"],
@@ -127,7 +82,7 @@ export function useAdminSubscribers() {
       if (!actor) return [];
       return actor.getNewsletterSubscribers();
     },
-    enabled: !!actor && !isFetching && !!identity,
+    enabled: !!actor && !isFetching,
   });
 }
 

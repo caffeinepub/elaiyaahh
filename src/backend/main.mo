@@ -1,13 +1,11 @@
 import Map "mo:core/Map";
 import Set "mo:core/Set";
 import Text "mo:core/Text";
-import Iter "mo:core/Iter";
 import Order "mo:core/Order";
 import List "mo:core/List";
 import Principal "mo:core/Principal";
-import Runtime "mo:core/Runtime";
-
 import Nat "mo:core/Nat";
+
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
@@ -15,7 +13,7 @@ import Storage "blob-storage/Storage";
 
 
 actor {
-  // Access control
+  // Keep stable vars for upgrade compatibility (not used for auth)
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
   include MixinStorage();
@@ -76,45 +74,6 @@ actor {
   var nextProductId = 10;
   var nextJournalPostId = 10;
 
-  // ─── Admin claim ────────────────────────────────────────────────────────────
-
-  // Returns true if an admin has already been assigned
-  public query func isAdminClaimed() : async Bool {
-    accessControlState.adminAssigned;
-  };
-
-  // First logged-in user to call this becomes admin (one-time only)
-  public shared ({ caller }) func claimAdmin() : async Bool {
-    if (caller.isAnonymous()) { return false };
-    if (accessControlState.adminAssigned) { return false };
-    accessControlState.userRoles.add(caller, #admin);
-    accessControlState.adminAssigned := true;
-    true;
-  };
-
-  // ─── User profile ────────────────────────────────────────────────────────────
-
-  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can access profiles");
-    };
-    userProfiles.get(caller);
-  };
-
-  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own profile");
-    };
-    userProfiles.get(user);
-  };
-
-  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can save profiles");
-    };
-    userProfiles.add(caller, profile);
-  };
-
   // Newsletter subscription - public, no auth required
   public func subscribeNewsletter(email : Text) : async Bool {
     if (newsletterSubscribers.contains(email)) { return false };
@@ -122,68 +81,47 @@ actor {
     true;
   };
 
-  // Admin-only product management
-  public shared ({ caller }) func addProduct(product : Product) : async Product {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can add products");
-    };
-
+  // Product management - open (frontend password gate handles access)
+  public shared func addProduct(product : Product) : async Product {
     let newProduct = { product with id = "prod" # nextProductId.toText() };
     products.add(newProduct.id, newProduct);
     nextProductId += 1;
     newProduct;
   };
 
-  public shared ({ caller }) func updateProduct(id : Text, product : Product) : async Bool {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can update products");
-    };
-
+  public shared func updateProduct(id : Text, product : Product) : async Bool {
     if (not products.containsKey(id)) { return false };
     products.add(id, product);
     true;
   };
 
-  public shared ({ caller }) func deleteProduct(id : Text) : async Bool {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can delete products");
-      };
+  public shared func deleteProduct(id : Text) : async Bool {
     if (not products.containsKey(id)) { return false };
     products.remove(id);
     true;
   };
 
-  // Admin-only journal management
-  public shared ({ caller }) func addJournalPost(journalPost : JournalPost) : async JournalPost {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can add journal posts");
-    };
-
+  // Journal management - open (frontend password gate handles access)
+  public shared func addJournalPost(journalPost : JournalPost) : async JournalPost {
     let newPost = { journalPost with id = "jp" # nextJournalPostId.toText() };
     journalPosts.add(newPost.id, newPost);
     nextJournalPostId += 1;
     newPost;
   };
 
-  public shared ({ caller }) func updateJournalPost(id : Text, journalPost : JournalPost) : async Bool {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can update journal posts");
-    };
+  public shared func updateJournalPost(id : Text, journalPost : JournalPost) : async Bool {
     if (not journalPosts.containsKey(id)) { return false };
     journalPosts.add(id, journalPost);
     true;
   };
 
-  public shared ({ caller }) func deleteJournalPost(id : Text) : async Bool {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
-      Runtime.trap("Unauthorized: Only admins can delete journal posts");
-    };
+  public shared func deleteJournalPost(id : Text) : async Bool {
     if (not journalPosts.containsKey(id)) { return false };
     journalPosts.remove(id);
     true;
   };
 
-  // Public query functions - no auth required
+  // Public query functions
   public query func getProducts() : async [Product] {
     products.values().toArray().sort();
   };

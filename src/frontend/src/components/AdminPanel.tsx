@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -27,37 +26,26 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  Loader2,
-  Lock,
-  LogOut,
-  Pencil,
-  Plus,
-  ShieldAlert,
-  ShieldCheck,
-  Trash2,
-} from "lucide-react";
+import { Loader2, Lock, LogOut, Pencil, Plus, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { JournalPost, Product } from "../backend.d";
 import { ProductCategory } from "../backend.d";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
   useAddJournalPost,
   useAddProduct,
   useAdminJournalPosts,
   useAdminProducts,
   useAdminSubscribers,
-  useClaimAdmin,
   useDeleteJournalPost,
   useDeleteProduct,
-  useIsAdminClaimed,
-  useIsCallerAdmin,
   useUpdateJournalPost,
   useUpdateProduct,
 } from "../hooks/useQueries";
+
+const ADMIN_PASSWORD = "sayyid321321";
+const SESSION_KEY = "elaiyaahh_admin_auth";
 
 // ─── Product Form ────────────────────────────────────────────────────────────
 
@@ -736,28 +724,34 @@ function SubscribersTab() {
 // ─── Admin Panel Root ─────────────────────────────────────────────────────────
 
 export function AdminPanel({ onExit }: { onExit: () => void }) {
-  const { login, clear, loginStatus, identity, isInitializing } =
-    useInternetIdentity();
-  const isLoggingIn = loginStatus === "logging-in";
-  const isLoggedIn = loginStatus === "success" && !!identity;
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => sessionStorage.getItem(SESSION_KEY) === "true",
+  );
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: isAdmin, isLoading: checkingAdmin } = useIsCallerAdmin();
-  const { data: isAdminClaimed, isLoading: checkingClaimed } =
-    useIsAdminClaimed();
-  const claimAdmin = useClaimAdmin();
-  const queryClient = useQueryClient();
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+    setTimeout(() => {
+      if (password === ADMIN_PASSWORD) {
+        sessionStorage.setItem(SESSION_KEY, "true");
+        setIsLoggedIn(true);
+      } else {
+        setError("Incorrect password. Please try again.");
+      }
+      setIsSubmitting(false);
+    }, 400);
+  };
 
-  // Loading screen
-  if (isInitializing || (isLoggedIn && (checkingAdmin || checkingClaimed))) {
-    return (
-      <div
-        className="min-h-screen bg-cream-100 flex items-center justify-center"
-        data-ocid="admin.loading_state"
-      >
-        <Loader2 className="animate-spin text-gold" size={32} />
-      </div>
-    );
-  }
+  const handleLogout = () => {
+    sessionStorage.removeItem(SESSION_KEY);
+    setIsLoggedIn(false);
+    setPassword("");
+    onExit();
+  };
 
   if (!isLoggedIn) {
     return (
@@ -767,133 +761,65 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
         className="min-h-screen bg-cream-100 flex items-center justify-center px-6"
         data-ocid="admin.modal"
       >
-        <div className="w-full max-w-sm text-center">
-          <div className="w-14 h-14 rounded-full bg-cream-200 border border-cream-400 flex items-center justify-center mx-auto mb-6">
-            <Lock size={22} className="text-gold" />
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <div className="w-14 h-14 rounded-full bg-cream-200 border border-cream-400 flex items-center justify-center mx-auto mb-6">
+              <Lock size={22} className="text-gold" />
+            </div>
+            <p className="font-sans text-[10px] tracking-[0.35em] uppercase text-gold mb-2">
+              Admin Access
+            </p>
+            <h1 className="font-serif text-3xl font-medium text-ink">
+              Elaiyaahh
+            </h1>
           </div>
-          <p className="font-sans text-[10px] tracking-[0.35em] uppercase text-gold mb-2">
-            Admin Access
-          </p>
-          <h1 className="font-serif text-3xl font-medium text-ink mb-3">
-            Elaiyaahh
-          </h1>
-          <p className="font-sans text-xs text-ink-muted mb-8 leading-relaxed">
-            Sign in with your admin account to manage products, journals, and
-            subscribers.
-          </p>
-          <button
-            type="button"
-            disabled={isLoggingIn}
-            onClick={login}
-            className="w-full inline-flex items-center justify-center gap-2 px-8 py-3 bg-gold text-cream-50 font-sans font-medium text-xs tracking-[0.2em] uppercase hover:bg-gold-dark transition-colors disabled:opacity-60"
-            data-ocid="admin.primary_button"
-          >
-            {isLoggingIn && <Loader2 size={13} className="animate-spin" />}
-            {isLoggingIn ? "Connecting..." : "Admin Login"}
-          </button>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="grid gap-1.5">
+              <Label className="font-sans text-xs uppercase tracking-widest text-ink-muted">
+                Password
+              </Label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError("");
+                }}
+                placeholder="Enter admin password"
+                className="bg-cream-50 border-cream-400 text-ink text-sm text-center tracking-widest"
+                autoFocus
+                data-ocid="admin.input"
+              />
+            </div>
+
+            {error && (
+              <p
+                className="font-sans text-xs text-red-500 text-center"
+                data-ocid="admin.error_state"
+              >
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting || !password.trim()}
+              className="w-full inline-flex items-center justify-center gap-2 px-8 py-3 bg-gold text-cream-50 font-sans font-medium text-xs tracking-[0.2em] uppercase hover:bg-gold-dark transition-colors disabled:opacity-60"
+              data-ocid="admin.submit_button"
+            >
+              {isSubmitting && <Loader2 size={13} className="animate-spin" />}
+              {isSubmitting ? "Verifying..." : "Login"}
+            </button>
+          </form>
+
           <button
             type="button"
             onClick={onExit}
-            className="mt-4 block mx-auto font-sans text-xs text-ink-muted hover:text-ink transition-colors"
+            className="mt-5 block mx-auto font-sans text-xs text-ink-muted hover:text-ink transition-colors"
             data-ocid="admin.cancel_button"
           >
             ← Back to site
-          </button>
-        </div>
-      </motion.div>
-    );
-  }
-
-  // Claim admin screen — no one has claimed admin yet
-  if (!isAdmin && !isAdminClaimed) {
-    const handleClaim = async () => {
-      try {
-        await claimAdmin.mutateAsync();
-        await queryClient.invalidateQueries({
-          queryKey: ["isCallerAdmin", identity?.getPrincipal().toString()],
-        });
-        toast.success("Admin access claimed successfully!");
-      } catch {
-        toast.error("Failed to claim admin access.");
-      }
-    };
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="min-h-screen bg-cream-100 flex items-center justify-center px-6"
-        data-ocid="admin.modal"
-      >
-        <div className="w-full max-w-sm text-center">
-          <div className="w-14 h-14 rounded-full bg-cream-200 border border-gold/40 flex items-center justify-center mx-auto mb-6">
-            <ShieldCheck size={22} className="text-gold" />
-          </div>
-          <p className="font-sans text-[10px] tracking-[0.35em] uppercase text-gold mb-2">
-            First Time Setup
-          </p>
-          <h1 className="font-serif text-3xl font-medium text-ink mb-3">
-            Claim Admin
-          </h1>
-          <p className="font-sans text-xs text-ink-muted mb-8 leading-relaxed">
-            This is your first time accessing admin. Click below to claim
-            ownership of this store.
-          </p>
-          <button
-            type="button"
-            disabled={claimAdmin.isPending}
-            onClick={handleClaim}
-            className="w-full inline-flex items-center justify-center gap-2 px-8 py-3 bg-gold text-cream-50 font-sans font-medium text-xs tracking-[0.2em] uppercase hover:bg-gold-dark transition-colors disabled:opacity-60"
-            data-ocid="admin.primary_button"
-          >
-            {claimAdmin.isPending && (
-              <Loader2 size={13} className="animate-spin" />
-            )}
-            {claimAdmin.isPending ? "Claiming..." : "Claim Admin Access"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              clear();
-              onExit();
-            }}
-            className="mt-4 block mx-auto font-sans text-xs text-ink-muted hover:text-ink transition-colors"
-            data-ocid="admin.cancel_button"
-          >
-            ← Back to site
-          </button>
-        </div>
-      </motion.div>
-    );
-  }
-
-  // Access denied — admin already claimed by someone else
-  if (!isAdmin && isAdminClaimed) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="min-h-screen bg-cream-100 flex items-center justify-center px-6"
-        data-ocid="admin.error_state"
-      >
-        <div className="w-full max-w-sm text-center">
-          <div className="w-14 h-14 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mx-auto mb-6">
-            <ShieldAlert size={22} className="text-red-400" />
-          </div>
-          <h2 className="font-serif text-2xl text-ink mb-3">Access Denied</h2>
-          <p className="font-sans text-xs text-ink-muted mb-8 leading-relaxed">
-            Your account does not have admin privileges.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              clear();
-              onExit();
-            }}
-            className="inline-flex items-center gap-2 px-8 py-3 bg-gold text-cream-50 font-sans text-xs tracking-[0.2em] uppercase hover:bg-gold-dark transition-colors"
-            data-ocid="admin.secondary_button"
-          >
-            <LogOut size={13} /> Sign out
           </button>
         </div>
       </motion.div>
@@ -926,10 +852,7 @@ export function AdminPanel({ onExit }: { onExit: () => void }) {
           </div>
           <button
             type="button"
-            onClick={() => {
-              clear();
-              onExit();
-            }}
+            onClick={handleLogout}
             className="inline-flex items-center gap-1.5 font-sans text-xs text-ink-muted hover:text-ink transition-colors uppercase tracking-widest"
             data-ocid="admin.secondary_button"
           >

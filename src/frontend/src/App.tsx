@@ -1102,27 +1102,14 @@ function Footer({ onShopNav }: { onShopNav?: (view: View) => void }) {
           <p className="font-sans text-[10px] text-ink-light tracking-wide">
             © {year} Elaiyaahh. All rights reserved.
           </p>
-          <div className="flex items-center gap-4">
-            <p className="font-sans text-[10px] text-ink-light">
-              Built with love using{" "}
-              <a
-                href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(typeof window !== "undefined" ? window.location.hostname : "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-gold transition-colors"
-              >
-                caffeine.ai
-              </a>
-            </p>
-            <button
-              type="button"
-              onClick={() => onShopNav?.("admin")}
-              className="font-sans text-[9px] text-ink-light hover:text-gold transition-colors opacity-40 hover:opacity-100"
-              data-ocid="admin.open_modal_button"
-            >
-              Admin
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => onShopNav?.("admin")}
+            className="font-sans text-[9px] text-ink-light hover:text-gold transition-colors opacity-40 hover:opacity-100"
+            data-ocid="admin.open_modal_button"
+          >
+            Admin
+          </button>
         </div>
       </div>
     </footer>
